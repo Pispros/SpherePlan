@@ -417,22 +417,105 @@ function initCanvasInteractions() {
     { passive: false },
   );
 
+  /* ── Pointer-based pan + pinch-to-zoom (works on ALL mobile browsers) ── */
+  /*
+   * Modern approach: use Pointer Events API exclusively.
+   * - pointerdown / pointermove / pointerup for single-pointer pan
+   * - Track active pointers in a Map<pointerId, {x,y}>
+   * - When 2+ pointers are down → pinch-to-zoom (distance between them)
+   * - pointercancel resets state if browser intercepts the gesture
+   *
+   * This is the recommended approach by MDN and the Pointer Events spec.
+   */
   let panDragging = false,
-    panStart;
+    panStart,
+    isPinching = false;
+  const activePointers = new Map(); // pointerId → {clientX, clientY}
+  let pinchStartDist = 0,
+    pinchStartScale = 1;
+
+  function getPointerDistance(p1, p2) {
+    const dx = p2.clientX - p1.clientX;
+    const dy = p2.clientY - p1.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
   canvas.addEventListener("pointerdown", (e) => {
     if (e.target !== canvas && e.target !== world && e.target !== svg) return;
-    panDragging = true;
-    panStart = { x: e.clientX - STATE.panX, y: e.clientY - STATE.panY };
-    canvas.style.cursor = "grabbing";
     closeEdgePopover();
+
+    /* Always register the pointer */
+    activePointers.set(e.pointerId, { clientX: e.clientX, clientY: e.clientY });
+
+    if (activePointers.size === 1) {
+      /* Single pointer → pan */
+      panDragging = true;
+      isPinching = false;
+      panStart = { x: e.clientX - STATE.panX, y: e.clientY - STATE.panY };
+      canvas.style.cursor = "grabbing";
+    } else if (activePointers.size === 2) {
+      /* Two pointers → start pinch-to-zoom */
+      panDragging = false;
+      isPinching = true;
+      const pts = [...activePointers.values()];
+      pinchStartDist = getPointerDistance(pts[0], pts[1]);
+      pinchStartScale = STATE.scale;
+    }
+
+    /* Prevent browser from interfering with pointer gestures */
+    e.preventDefault();
   });
+
   window.addEventListener("pointermove", (e) => {
-    if (!panDragging) return;
-    STATE.panX = e.clientX - panStart.x;
-    STATE.panY = e.clientY - panStart.y;
-    applyTransform();
+    if (e.target !== canvas && e.target !== world && e.target !== svg) return;
+
+    /* Update pointer position(s) */
+    activePointers.set(e.pointerId, { clientX: e.clientX, clientY: e.clientY });
+
+    if (isPinching && activePointers.size >= 2) {
+      /* Pinch-to-zoom */
+      const pts = [...activePointers.values()];
+      const dist = getPointerDistance(pts[0], pts[1]);
+      const ratio = dist / pinchStartDist;
+      const newScale = Math.max(0.3, Math.min(2, pinchStartScale * ratio));
+
+      /* Zoom toward the midpoint between pointers */
+      const rect = canvas.getBoundingClientRect();
+      const mx = (pts[0].clientX + pts[1].clientX) / 2 - rect.left;
+      const my = (pts[0].clientY + pts[1].clientY) / 2 - rect.top;
+      const wx = (mx - STATE.panX) / STATE.scale;
+      const wy = (my - STATE.panY) / STATE.scale;
+      STATE.scale = newScale;
+      STATE.panX = mx - wx * STATE.scale;
+      STATE.panY = my - wy * STATE.scale;
+      applyTransform();
+    } else if (panDragging && activePointers.size === 1) {
+      /* Single-pointer pan */
+      const p = activePointers.get(e.pointerId);
+      if (p) {
+        STATE.panX = p.clientX - panStart.x;
+        STATE.panY = p.clientY - panStart.y;
+        applyTransform();
+      }
+    }
+
+    /* Only preventDefault when actively interacting */
+    if (activePointers.size >= 1) e.preventDefault();
   });
-  window.addEventListener("pointerup", () => {
+
+  window.addEventListener("pointerup", (e) => {
+    activePointers.delete(e.pointerId);
+    if (activePointers.size < 2) isPinching = false;
+    if (activePointers.size === 0) {
+      panDragging = false;
+      canvas.style.cursor = "";
+    }
+  });
+
+  window.addEventListener("pointercancel", () => {
+    /* Browser intercepted the gesture — reset everything */
+    activePointers.clear();
+    isPinching = false;
     panDragging = false;
     canvas.style.cursor = "";
   });

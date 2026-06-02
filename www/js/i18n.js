@@ -63,6 +63,9 @@ const TRANSLATIONS = {
     confirmDeleteProject: "Supprimer le projet",
     confirmDeleteMessage:
       "Êtes-vous sûr de vouloir supprimer ce projet ? Cette action est irréversible.",
+    confirmDeleteTask: "Supprimer la tâche",
+    confirmDeleteTaskMessage:
+      "Êtes-vous sûr de vouloir supprimer cette tâche ? Les sous-tâches et les connexions associées seront également supprimées.",
     confirm: "Confirmer",
     cancel: "Annuler",
     delete: "Supprimer",
@@ -382,6 +385,9 @@ const TRANSLATIONS = {
     confirmDeleteProject: "Delete project",
     confirmDeleteMessage:
       "Are you sure you want to delete this project? This action cannot be undone.",
+    confirmDeleteTask: "Delete task",
+    confirmDeleteTaskMessage:
+      "Are you sure you want to delete this task? Associated subtasks and connections will also be removed.",
     confirm: "Confirm",
     cancel: "Cancel",
     delete: "Delete",

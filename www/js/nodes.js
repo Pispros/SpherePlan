@@ -859,25 +859,38 @@ function addNodeAt(worldX, worldY) {
 function deleteNode(id) {
   const proj = getCurrentProject();
   if (!proj) return;
-  const nodesLayer = $("#nodes");
-  const el = nodesLayer.querySelector(`.node[data-id="${id}"]`);
-  if (el) {
-    el.style.transition = "opacity 0.2s ease, transform 0.2s ease";
-    el.style.opacity = "0";
-    el.style.transform += " scale(0.85)";
-    setTimeout(() => el.remove(), 200);
-  }
-  proj.nodes = proj.nodes.filter((n) => n.id !== id);
-  const removed = proj.edges.filter((e) => e.from === id || e.to === id);
-  removed.forEach((e) => {
-    if (e._path) e._path.remove();
-    if (e._hit) e._hit.remove();
-  });
-  proj.edges = proj.edges.filter((e) => e.from !== id && e.to !== id);
-  saveProjects();
-  closeDetail();
-  closeEdgePopover();
-  setTimeout(() => renderCurrentProject(), 220);
+  const node = proj.nodes.find((n) => n.id === id);
+  if (!node) return;
+
+  openConfirmModal(
+    t("confirmDeleteTask") || "Supprimer la tâche",
+    (t("confirmDeleteTaskMessage") ||
+      "Êtes-vous sûr de vouloir supprimer cette tâche ? Les sous-tâches et les connexions associées seront également supprimées.") +
+      `\n\n"${node.title}"`,
+    t("delete") || "Supprimer",
+    t("cancel") || "Annuler",
+    () => {
+      const nodesLayer = $("#nodes");
+      const el = nodesLayer.querySelector(`.node[data-id="${id}"]`);
+      if (el) {
+        el.style.transition = "opacity 0.2s ease, transform 0.2s ease";
+        el.style.opacity = "0";
+        el.style.transform += " scale(0.85)";
+        setTimeout(() => el.remove(), 200);
+      }
+      proj.nodes = proj.nodes.filter((n) => n.id !== id);
+      const removed = proj.edges.filter((e) => e.from === id || e.to === id);
+      removed.forEach((e) => {
+        if (e._path) e._path.remove();
+        if (e._hit) e._hit.remove();
+      });
+      proj.edges = proj.edges.filter((e) => e.from !== id && e.to !== id);
+      saveProjects();
+      closeDetail();
+      closeEdgePopover();
+      setTimeout(() => renderCurrentProject(), 220);
+    },
+  );
 }
 
 /* ─── DETAIL PANEL ──────────────────────────────────────────────────── */
