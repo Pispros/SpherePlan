@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SpherePlan</string>
+    <string name="title_activity_main">SpherePlan</string>
+    <string name="package_name">com.naanocorp.planner</string>
+    <string name="custom_url_scheme">com.naanocorp.planner</string>
+</resources>
