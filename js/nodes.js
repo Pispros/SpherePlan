@@ -945,8 +945,9 @@ function openDetail(n) {
           n.resources && n.resources.length
             ? n.resources
                 .map(
-                  (r) => `
-          <div class="resource">
+                  (r, index) => `
+          <div class="resource" data-resource-idx="${index}" ${r.url ? 'data-url="' + escapeHtml(r.url) + '"' : ""}>
+            <button class="resource-drag-up" title="Monter">${'<svg viewBox="0 0 12 12" fill="none"><path d="M6 9l-3 3M6 9l3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'}</button>
             <span class="resource-icon">
               ${
                 r.type === "link"
@@ -978,6 +979,7 @@ function openDetail(n) {
                 </svg>
               </button>
             </div>
+            <button class="resource-drag-down" title="Descendre">${'<svg viewBox="0 0 12 12" fill="none"><path d="M6 3l-3-3M6 3l3-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'}</button>
           </div>`,
                 )
                 .join("")

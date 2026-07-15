@@ -561,6 +561,71 @@ const PROVIDERS = {
       return text;
     },
   },
+
+  local: {
+    name: "Local OpenAI-compatible",
+    placeholderModel: "http://localhost:8080/v1",
+    color: "var(--purple)",
+    // ⚠️ Le provider local n'utilise PAS de tool web_search natif.
+    // Pour ajouter la recherche, il faut intégrer Tavily/SerpAPI/Brave
+    // en function calling — hors scope ici.
+    supportsWebSearch: false,
+    /**
+     * @param {object} args
+     * @param {string} args.system
+     * @param {string} args.user
+     * @param {string} args.apiKey
+     * @param {string} args.model - URL du serveur (ex: http://localhost:8080/v1)
+     * @param {boolean} [args.webSearch]
+     */
+    async call({ system, user, apiKey, model, webSearch = false }) {
+      if (webSearch) {
+        console.warn(
+          "[Local] La recherche web n'est pas supportée nativement par l'API locale. " +
+            "Le paramètre webSearch est ignoré.",
+        );
+      }
+
+      const baseUrl = model || "http://localhost:8080/v1";
+      
+      // ─── Branche Chat Completions classique (sans recherche) ───────
+      // Le format est compatible OpenAI et fonctionne avec les serveurs
+      // locaux comme llama.cpp, Ollama, etc.
+      const res = await fetch(`${baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "local-model", // Nom du modèle (souvent ignoré par les serveurs locaux)
+          messages: [
+            { role: "system", content: system },
+            { role: "user", content: user },
+          ],
+          response_format: { type: "json_object" },
+          stream: false,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok)
+        throw new Error(
+          data?.error?.message || `Local API: HTTP ${res.status}`,
+        );
+
+      const finishReason = data.choices?.[0]?.finish_reason;
+      if (finishReason === "length") {
+        throw new Error(
+          "Réponse locale tronquée (finish_reason: length). " +
+            "Augmente max_tokens.",
+        );
+      }
+
+      const text = data.choices?.[0]?.message?.content;
+      if (!text) throw new Error("Réponse locale vide");
+      return text;
+    },
+  },
 };
 
 /* ─── JSON EXTRACTION ───────────────────────────────────────────────── */

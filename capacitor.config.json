@@ -1,6 +1,6 @@
 {
   "appId": "com.naanocorp.planner",
-  "appName": "SpherePlan",
+  "appName": "Sphere Plan",
   "webDir": "www",
   "server": {
     "androidScheme": "https",

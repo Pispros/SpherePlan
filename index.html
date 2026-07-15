@@ -1342,10 +1342,90 @@
                                     align-self: center;
                                 "
                                 >deepseek-v4-pro - deepseek-v4-flash</span
-                            >
+                                >
+                            </div>
+                        </div>
+                        <div
+                            class="provider-card"
+                            id="provider-local"
+                            data-provider="local"
+                        >
+                            <div class="provider-head">
+                                <span
+                                    class="provider-mark"
+                                    data-provider="local"
+                                    ><svg viewBox="0 0 14 14" fill="none">
+                                        <path
+                                            d="M3 3h8a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"
+                                            stroke="currentColor"
+                                            stroke-width="1.2"
+                                        /><path
+                                            d="M5 6h4M5 8h4M5 10h2"
+                                            stroke="currentColor"
+                                            stroke-width="1.2"
+                                        /></svg
+                                ></span>
+                                <span class="provider-name"
+                                    >Local OpenAI-compatible</span
+                                >
+                                <span class="provider-status" data-status
+                                    >Non configure</span
+                                >
+                            </div>
+                            <div class="provider-fields">
+                                <div class="field">
+                                    <label class="field-label"
+                                        >URL du serveur (endpoint)</label
+                                    ><input
+                                        class="field-input"
+                                        data-field="model"
+                                        placeholder="http://localhost:8080/v1"
+                                    />
+                                </div>
+                                <div class="field">
+                                    <label class="field-label">Cle API</label>
+                                    <div class="key-input-wrap">
+                                        <input
+                                            class="field-input"
+                                            type="password"
+                                            data-field="apiKey"
+                                            placeholder="sk-..."
+                                        /><button
+                                            class="key-toggle"
+                                            data-toggle-key
+                                        >
+                                            <svg viewBox="0 0 14 14" fill="none">
+                                                <path
+                                                    d="M1 7s2.4-4 6-4 6 4 6 4-2.4 4-6 4-6-4-6-4z"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.1"
+                                                />
+                                                <circle
+                                                    cx="7"
+                                                    cy="7"
+                                                    r="1.6"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.1"
+                                                />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="provider-actions">
+                                <button class="btn btn-bordered" data-test></button>
+                                   <span
+                                    style="
+                                        font-family: var(--font-mono);
+                                        font-size: 10.5px;
+                                        color: var(--fg-faint);
+                                        align-self: center;
+                                    "
+                                    >llama.cpp / Ollama / autres</span
+                                >
+                            </div>
                         </div>
                     </div>
-                </div>
                 <div class="modal-foot">
                     <span class="modal-foot-info"
                         >Tes cles ne quittent jamais ton navigateur, sauf vers
