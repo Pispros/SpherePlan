@@ -223,6 +223,203 @@ function renderNotesList() {
   });
 }
 
+/* ─── MARKDOWN PARSER ─────────────────────────────────────────────────
+   Parseur markdown "bloc-conscient" pour l'aperçu des notes.
+   La structure des blocs est détectée sur le texte BRUT (pour que `>`,
+   les fences, etc. se comportent normalement), et l'échappement HTML
+   est fait au moment de l'émission — jamais avant. Sûr côté XSS.
+   Gère : titres (h1–h6), code clôturé (avec label de langage),
+   citations imbriquées, listes ordonnées / non ordonnées / imbriquées /
+   cases à cocher, tableaux (avec alignement), règles horizontales,
+   images, liens, gras / italique / barré / code en ligne. */
+function parseMarkdown(text) {
+  if (!text) return "";
+
+  // ── Formatage en ligne ────────────────────────────────────────────
+  function inline(raw) {
+    // 1. Protège les spans de code (contenu brut mis de côté).
+    const codeSpans = [];
+    let str = raw.replace(/`([^`]+)`/g, (_, code) => {
+      codeSpans.push(code);
+      return `\u0000C${codeSpans.length - 1}\u0000`;
+    });
+
+    // 2. Échappe le reste.
+    str = escapeHtml(str);
+
+    // 3. Images ![alt](src "title") — avant les liens.
+    str = str.replace(
+      /!\[([^\]]*)\]\(([^)\s]+)(?:\s+&quot;([^&]*)&quot;)?\)/g,
+      (_, alt, src, title) =>
+        `<img src="${src}" alt="${alt}"${title ? ` title="${title}"` : ""} loading="lazy" />`,
+    );
+
+    // 4. Liens [texte](href "title")
+    str = str.replace(
+      /\[([^\]]+)\]\(([^)\s]+)(?:\s+&quot;([^&]*)&quot;)?\)/g,
+      (_, label, href, title) =>
+        `<a href="${href}" target="_blank" rel="noopener noreferrer"${title ? ` title="${title}"` : ""}>${label}</a>`,
+    );
+
+    // 5. Emphase. ***x*** puis **x**/__x__ puis *x*/_x_.
+    str = str.replace(/\*\*\*(\S(?:.*?\S)?)\*\*\*/g, "<strong><em>$1</em></strong>");
+    str = str.replace(/\*\*(\S(?:.*?\S)?)\*\*/g, "<strong>$1</strong>");
+    str = str.replace(/__(\S(?:.*?\S)?)__/g, "<strong>$1</strong>");
+    str = str.replace(/\*(\S(?:.*?\S)?)\*/g, "<em>$1</em>");
+    str = str.replace(/(^|[\s(])_(\S(?:.*?\S)?)_(?=[\s).,!?:;]|$)/g, "$1<em>$2</em>");
+    str = str.replace(/~~(\S(?:.*?\S)?)~~/g, "<del>$1</del>");
+
+    // 6. Restaure les spans de code (contenu échappé).
+    str = str.replace(/\u0000C(\d+)\u0000/g, (_, i) => `<code>${escapeHtml(codeSpans[+i])}</code>`);
+    return str;
+  }
+
+  const lines = String(text).replace(/\r\n?/g, "\n").split("\n");
+  const out = [];
+  let i = 0;
+  const isBlank = (l) => /^\s*$/.test(l);
+
+  // Construit une liste éventuellement imbriquée (indentation : 2 espaces
+  // ou 1 tabulation = 1 niveau).
+  function renderList(items) {
+    let idx = 0;
+    function build(level) {
+      const ordered = items[idx].ordered;
+      let s = ordered ? "<ol>" : "<ul>";
+      while (idx < items.length && items[idx].indent >= level) {
+        const it = items[idx];
+        if (it.indent > level) {
+          s = s.replace(/<\/li>$/, build(it.indent) + "</li>");
+          continue;
+        }
+        if (it.checked !== null) {
+          s +=
+            `<li class="task-item"><input type="checkbox" disabled${it.checked ? " checked" : ""}/> ` +
+            inline(it.text) + "</li>";
+        } else {
+          s += "<li>" + inline(it.text) + "</li>";
+        }
+        idx++;
+      }
+      return s + (ordered ? "</ol>" : "</ul>");
+    }
+    return build(items[0].indent);
+  }
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    if (isBlank(line)) { i++; continue; }
+
+    // Bloc de code clôturé ``` ou ~~~
+    const fence = line.match(/^(\s*)(`{3,}|~{3,})(.*)$/);
+    if (fence) {
+      const marker = fence[2][0];
+      const lang = fence[3].trim().split(/\s+/)[0];
+      const buf = [];
+      i++;
+      const close = new RegExp(`^\\s*${marker === "`" ? "`" : "~"}{3,}\\s*$`);
+      while (i < lines.length && !close.test(lines[i])) { buf.push(lines[i]); i++; }
+      i++;
+      const langClass = lang ? ` class="language-${escapeHtml(lang)}"` : "";
+      const langLabel = lang ? `<span class="code-lang">${escapeHtml(lang)}</span>` : "";
+      out.push(`<pre>${langLabel}<code${langClass}>${escapeHtml(buf.join("\n"))}</code></pre>`);
+      continue;
+    }
+
+    // Règle horizontale
+    if (/^\s*([-*_])(\s*\1){2,}\s*$/.test(line)) { out.push("<hr/>"); i++; continue; }
+
+    // Titre ATX
+    const h = line.match(/^\s{0,3}(#{1,6})\s+(.*?)\s*#*\s*$/);
+    if (h) { out.push(`<h${h[1].length}>${inline(h[2])}</h${h[1].length}>`); i++; continue; }
+
+    // Citation (récursion sur le contenu brut)
+    if (/^\s{0,3}>\s?/.test(line)) {
+      const buf = [];
+      while (i < lines.length && /^\s{0,3}>\s?/.test(lines[i])) {
+        buf.push(lines[i].replace(/^\s{0,3}>\s?/, ""));
+        i++;
+      }
+      out.push(`<blockquote>${parseMarkdown(buf.join("\n"))}</blockquote>`);
+      continue;
+    }
+
+    // Tableau
+    if (line.includes("|") && i + 1 < lines.length &&
+        /^\s*\|?[\s:|-]*-[\s:|-]*\|?\s*$/.test(lines[i + 1]) &&
+        lines[i + 1].includes("-")) {
+      const splitRow = (r) =>
+        r.replace(/^\s*\|/, "").replace(/\|\s*$/, "").split("|").map((c) => c.trim());
+      const header = splitRow(line);
+      const aligns = splitRow(lines[i + 1]).map((c) => {
+        const l = c.startsWith(":"), r = c.endsWith(":");
+        return l && r ? "center" : r ? "right" : l ? "left" : "";
+      });
+      i += 2;
+      const rows = [];
+      while (i < lines.length && lines[i].includes("|") && !isBlank(lines[i])) {
+        rows.push(splitRow(lines[i])); i++;
+      }
+      const th = header
+        .map((c, k) => `<th${aligns[k] ? ` style="text-align:${aligns[k]}"` : ""}>${inline(c)}</th>`)
+        .join("");
+      const trs = rows
+        .map((row) => "<tr>" + header
+          .map((_, k) => `<td${aligns[k] ? ` style="text-align:${aligns[k]}"` : ""}>${inline(row[k] || "")}</td>`)
+          .join("") + "</tr>")
+        .join("");
+      out.push(`<table><thead><tr>${th}</tr></thead><tbody>${trs}</tbody></table>`);
+      continue;
+    }
+
+    // Liste
+    if (/^(\s*)([-*+]|\d+[.)])\s+/.test(line)) {
+      const items = [];
+      while (i < lines.length) {
+        const m = lines[i].match(/^(\s*)([-*+]|\d+[.)])\s+(.*)$/);
+        if (!m) {
+          if (!isBlank(lines[i]) && /^\s+\S/.test(lines[i]) && items.length) {
+            items[items.length - 1].text += " " + lines[i].trim();
+            i++; continue;
+          }
+          break;
+        }
+        const indent = Math.floor(m[1].replace(/\t/g, "  ").length / 2);
+        const ordered = /\d/.test(m[2]);
+        let text = m[3], checked = null;
+        const task = text.match(/^\[([ xX])\]\s+(.*)$/);
+        if (task) { checked = task[1].toLowerCase() === "x"; text = task[2]; }
+        items.push({ indent, ordered, checked, text });
+        i++;
+      }
+      out.push(renderList(items));
+      continue;
+    }
+
+    // Paragraphe
+    const para = [];
+    while (i < lines.length && !isBlank(lines[i]) &&
+      !/^\s*(`{3,}|~{3,})/.test(lines[i]) &&
+      !/^\s{0,3}#{1,6}\s+/.test(lines[i]) &&
+      !/^\s{0,3}>\s?/.test(lines[i]) &&
+      !/^\s*([-*_])(\s*\1){2,}\s*$/.test(lines[i]) &&
+      !/^(\s*)([-*+]|\d+[.)])\s+/.test(lines[i])) {
+      para.push(lines[i]); i++;
+    }
+    if (para.length) {
+      const joined = para
+        .map((l) => l.replace(/(\\|\s{2,})$/, "\u0000BR\u0000"))
+        .join("\n")
+        .replace(/\u0000BR\u0000\n/g, "<br/>")
+        .replace(/\n/g, " ");
+      out.push(`<p>${inline(joined)}</p>`);
+    }
+  }
+
+  return out.join("\n");
+}
+
 /* ─── PREVIEW PANE ──────────────────────────────────────────────────── */
 function renderNotePreview() {
   const proj = getCurrentProject();
@@ -262,7 +459,7 @@ function renderNotePreview() {
     }
   } else {
     if (note.content && note.content.trim()) {
-      bodyHtml = `<div class="notes-preview-text">${escapeHtml(note.content)}</div>`;
+      bodyHtml = `<div class="notes-preview-text markdown-content">${parseMarkdown(note.content)}</div>`;
     } else {
       bodyHtml = `<div class="notes-preview-text empty">${escapeHtml(t("writeHere"))}</div>`;
     }
