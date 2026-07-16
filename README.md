@@ -5,78 +5,78 @@
 [![Stars](https://img.shields.io/github/stars/Pispros/spherePlan?style=social)](https://github.com/Pispros/spherePlan)
 [![Issues](https://img.shields.io/github/issues/Pispros/spherePlan)](https://github.com/Pispros/spherePlan/issues)
 
-SpherePlan est une application de bureau open-source (licence MIT) conçue pour transformer une idée brute en feuille de route visuelle et exploitable. L'outil s'adresse aux makers, freelances, étudiant·e·s et équipes produit qui veulent planifier rapidement des projets sans dépendre d'un service cloud ni d'un compte utilisateur.
+SpherePlan is an open-source desktop application (MIT license) designed to turn a raw idea into a visual, actionable roadmap. It targets makers, freelancers, students and product teams who want to plan projects quickly without relying on a cloud service or user account.
 
-Site officiel : https://spherenote.space  
+Official site: https://spherenote.space  
 
-## Fonctionnalités principales
+## Key features
 
-- Génération de roadmap par IA : décris un objectif en langage naturel (ex. « lancer un MVP en 30 jours ») et l'IA produit une roadmap structurée avec phases, tâches, dépendances et échéances suggérées.
-- Visualisation en constellation : tâches affichées comme nœuds sur un canvas infini, connectées par des arêtes (séquentielle, parallèle, critique, optionnelle). Déplacement, zoom et réorganisation libres.
-- Tâches riches : titre, description, catégorie, statut, dates, prérequis, ressources, sous-tâches et événements (notes datées, texte ou manuscrites au stylet).
-- Cahier multi-feuilles : notes de projet façon OneNote, avec autant de feuilles que nécessaire, texte et notes manuscrites.
-- Notifications & rappels : mail quotidien (sauf dimanche) avec synthèse des tâches (terminées, en cours, expirées) et section « comment commencer ? » pour les tâches proches d'échéance.
-- Synchronisation cloud optionnelle : backend PocketBase (apw.naanocorp.com). Création d'un compte NaanoCorp gratuit pour upload/download ou synchronisation d'un projet individuel. Gestion automatique des conflits et projets orphelins.
-- Export/import JSON : sauvegarde/restauration complètes au format `exportVersion: 2` (projets, tâches, sous-tâches, événements, dépendances, notes, métadonnées).
-- Multi-providers IA : compatible Anthropic (Claude), OpenAI (GPT) et tout provider proposant une API de type chat‑completions. L'utilisateur fournit sa propre clé d'API (BYO-API-key).
-- Bilingue FR/EN.
-- 100 % local par défaut : données stockées dans `localStorage` (web) ou dans le profil utilisateur Electron (desktop). Aucune donnée n'est envoyée à NaanoCorp sans consentement explicite.
+- AI roadmap generation: describe a goal in natural language (e.g. "launch an MVP in 30 days") and the AI outputs a structured roadmap with phases, tasks, dependencies and suggested deadlines.
+- Constellation visualization: tasks displayed as nodes on an infinite canvas, connected by edges (sequential, parallel, critical, optional). Drag, zoom and reorganize freely.
+- Rich tasks: title, description, category, status, dates, prerequisites, resources, subtasks and events (dated notes, text or stylus handwriting).
+- Multi-sheet notebook: OneNote-style project notebook with as many sheets as needed, supporting text and handwritten notes.
+- Notifications & reminders: daily email (except Sunday) summarizing project tasks (done, in-progress, overdue) and a "how to get started" section linking to the most up-to-date task resources near their due date.
+- Optional cloud sync: PocketBase backend (apw.naanocorp.com). Create a free NaanoCorp account for uploading/downloading or syncing individual projects. Automatic conflict and orphaned-project handling.
+- JSON import/export: full backup/restore using `exportVersion: 2` (projects, tasks, subtasks, events, dependencies, notes, metadata).
+- Multi-provider AI support: Anthropic (Claude), OpenAI (GPT) and any provider offering a chat-completions style API. Users provide their own API keys (BYO-API-key).
+- Bilingual UI (FR/EN).
+- Local-first: data stored in `localStorage` (web) or the Electron user profile (desktop). No data is sent to NaanoCorp without explicit consent.
 
-## Mode d'utilisation — IA ou 100 % manuel
+## AI or fully manual
 
-SpherePlan peut être utilisé uniquement en mode manuel : création de projets, phases, tâches, dépendances et notes entièrement à la main, sans jamais configurer de clé d'API ni contacter un service externe. L'IA est une option pour accélérer la création de roadmaps, pas une obligation.
+SpherePlan can be used entirely manually: create projects, phases, tasks, dependencies and notes by hand without ever configuring an API key or contacting an external service. AI is an optional accelerator, not a requirement.
 
-## Cloud ou pas cloud
+## Cloud optional
 
-La synchronisation cloud est strictement optionnelle. Si tu veux synchroniser des projets entre appareils, crée un compte NaanoCorp et active la sync. Les données transitent en HTTPS et restent ta propriété. Les conditions d'utilisation sont disponibles ici : https://naanocorp.com/terms-conditions
+Cloud sync is strictly optional. To sync projects across devices, create a free NaanoCorp account and enable sync. Data is transmitted over HTTPS and remains your property. Terms: https://naanocorp.com/terms-conditions
 
-## Éthique et confidentialité
+## Privacy & ethics
 
-- Zéro télémétrie : aucune collecte sans consentement.
-- BYO-API-key : si tu utilises l'IA, tu paies directement le provider. Pas de proxy ni d'abonnement caché.
-- Open-source : code sous licence MIT, auditable et modifiable.
+- No telemetry by default.
+- BYO-API-key: you pay the AI provider directly; NaanoCorp does not proxy or add hidden fees.
+- Open-source: MIT license, auditable and modifiable.
 
-## Plateformes distribuées
+## Platforms
 
 - Windows (NSIS)
 - macOS (DMG, Intel + Apple Silicon)
 - Linux (AppImage, .deb)
-- Version web accessible sans installation
+- Web version (no installation)
 
-## Installation & exécution — rapide
+## Quick install & run
 
-Prerequis typiques : Node.js 16+ et un gestionnaire de paquets (`npm`, `yarn` ou `pnpm`). Vérifie le `package.json` du projet pour des scripts et versions exactes.
+Typical prerequisites: Node.js 16+ and a package manager (`npm`, `yarn` or `pnpm`). Check the project's `package.json` for exact scripts and versions.
 
-Exemples (à adapter selon le repo) :
+Examples (adapt to the repo):
 
 ```bash
-# installer les dépendances
+# install deps
 npm install
 
-# démarrer en mode développement (web / electron selon config)
+# start in development mode (web / electron depending on config)
 npm run dev
 
-# builder les binaires / packages
+# build packages / binaries
 npm run build
 ```
 
-Pour des instructions précises de build et de packaging, consulte le `README.en.md`/`DEVELOPER.md` du dépôt ou la section "Releases" sur GitHub.
+For precise build and packaging instructions, see `README.md`/`DEVELOPER.md` or the project's GitHub Releases.
 
 ## Import / Export
 
-Utilise l'export JSON (format `exportVersion: 2`) pour sauvegarder et restaurer des projets. Le format préserve projets, tâches, sous-tâches, événements, dépendances, notes et métadonnées pour un round-trip fidèle.
+Use the JSON export (`exportVersion: 2`) to backup and restore projects. The format preserves projects, tasks, subtasks, events, dependencies, notes and metadata for a faithful round-trip.
 
-## Contribution
+## Contributing
 
-Contributions, rapports de bugs et demandes de fonctionnalités sont bienvenus via le dépôt GitHub : https://github.com/Pispros/spherePlan  
-Consulte le fichier `CONTRIBUTING.md` du projet (s'il existe) pour les règles et le workflow.
+Bug reports, feature requests and contributions are welcome via GitHub: https://github.com/Pispros/spherePlan  
+See `CONTRIBUTING.md` if present for contribution guidelines.
 
-## Liens utiles
+## Useful links
 
-- Site de l'app : https://spherenote.space  
-- Contact : https://naanocorp.com/contact-us/  
-- GitHub : https://github.com/Pispros/spherePlan
+- App: https://spherenote.space  
+- Contact: https://naanocorp.com/contact-us/  
+- GitHub: https://github.com/Pispros/spherePlan
 
-## Licence
+## License
 
-SpherePlan est distribué sous licence MIT. Voir le fichier `LICENSE` pour le texte complet.
+SpherePlan is available under the MIT license. See `LICENSE` for full text.
