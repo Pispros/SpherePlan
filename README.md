@@ -18,7 +18,7 @@ Official site: https://spherenote.space
 - Notifications & reminders: daily email (except Sunday) summarizing project tasks (done, in-progress, overdue) and a "how to get started" section linking to the most up-to-date task resources near their due date.
 - Optional cloud sync: PocketBase backend (apw.naanocorp.com). Create a free NaanoCorp account for uploading/downloading or syncing individual projects. Automatic conflict and orphaned-project handling.
 - JSON import/export: full backup/restore using `exportVersion: 2` (projects, tasks, subtasks, events, dependencies, notes, metadata).
-- Multi-provider AI support: Anthropic (Claude), OpenAI (GPT) and any provider offering a chat-completions style API. Users provide their own API keys (BYO-API-key).
+- Multi-provider AI support: Anthropic (Claude), OpenAI (GPT), Local LLM (ollama, llama.cpp, ...) and any provider offering a chat-completions style API. Users provide their own API keys (BYO-API-key). The key is a random string if you are using local llm.
 - Bilingual UI (FR/EN).
 - Local-first: data stored in `localStorage` (web) or the Electron user profile (desktop). No data is sent to NaanoCorp without explicit consent.
 
